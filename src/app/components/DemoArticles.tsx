@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ExternalLink, Shield } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -70,68 +70,50 @@ const sampleArticles: Article[] = [
   },
 ];
 
+type Filter = 'all' | 'high' | 'medium' | 'low';
+
 interface DemoArticlesProps {
   onSelectArticle: (article: Article) => void;
 }
 
+const filterOptions: Array<{ value: Filter; label: string; activeClass: string }> = [
+  { value: 'all', label: 'All', activeClass: 'bg-blue-600 text-white' },
+  { value: 'high', label: 'High Credibility', activeClass: 'bg-green-600 text-white' },
+  { value: 'medium', label: 'Medium', activeClass: 'bg-yellow-600 text-white' },
+  { value: 'low', label: 'Low Credibility', activeClass: 'bg-red-600 text-white' },
+];
+
+const getScoreBadge = (score: number) => {
+  if (score >= 75) return { text: 'High', className: 'bg-green-100 text-green-800' };
+  if (score >= 50) return { text: 'Medium', className: 'bg-yellow-100 text-yellow-800' };
+  return { text: 'Low', className: 'bg-red-100 text-red-800' };
+};
+
 export function DemoArticles({ onSelectArticle }: DemoArticlesProps) {
-  const [filter, setFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
+  const [filter, setFilter] = useState<Filter>('all');
 
-  const filteredArticles = filter === 'all' 
-    ? sampleArticles 
-    : sampleArticles.filter(a => a.category === filter);
-
-  const getScoreBadge = (score: number) => {
-    if (score >= 75) return { text: 'High', className: 'bg-green-100 text-green-800' };
-    if (score >= 50) return { text: 'Medium', className: 'bg-yellow-100 text-yellow-800' };
-    return { text: 'Low', className: 'bg-red-100 text-red-800' };
-  };
+  const filteredArticles = useMemo(() => {
+    return filter === 'all' ? sampleArticles : sampleArticles.filter(a => a.category === filter);
+  }, [filter]);
 
   return (
     <div className="space-y-4">
       <div>
         <h3 className="font-medium mb-3">Sample Articles to Test</h3>
         <div className="flex gap-2 mb-4">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-3 py-1 text-xs rounded-full transition-colors ${
-              filter === 'all'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setFilter('high')}
-            className={`px-3 py-1 text-xs rounded-full transition-colors ${
-              filter === 'high'
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            High Credibility
-          </button>
-          <button
-            onClick={() => setFilter('medium')}
-            className={`px-3 py-1 text-xs rounded-full transition-colors ${
-              filter === 'medium'
-                ? 'bg-yellow-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Medium
-          </button>
-          <button
-            onClick={() => setFilter('low')}
-            className={`px-3 py-1 text-xs rounded-full transition-colors ${
-              filter === 'low'
-                ? 'bg-red-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Low Credibility
-          </button>
+          {filterOptions.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => setFilter(option.value)}
+              className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                filter === option.value
+                  ? option.activeClass
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
       </div>
 
